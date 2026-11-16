@@ -34,6 +34,8 @@
     autoSpeed: true,          // false = 完全不碰倍速
     graphReadWaitMs: 8000,    // 图文最多等多久写完成状态
     graphAdvanceDelay: 1000,  // 图文页至少停留多久再跳
+    coursewareReadWaitMs: 8000, // 课件最多等多久写完成状态
+    coursewareAdvanceDelay: 1000, // 课件页至少停留多久再跳
     skipAdvanceDelay: 500,    // 误入自测/拓展时，多快跳走
 
     // ---- 圆形角标的动画参数 ----
@@ -170,6 +172,8 @@
 
   function currentRouteKind() {
     const path = location.pathname;
+    const tag = textOf(document.querySelector('.learning-space-control-unit .unit-tag'));
+    if (/课件/.test(tag)) return 'courseware';
     if (/\/video\/\d+/.test(path)) return 'video';
     if (/\/graph\/\d+/.test(path)) return 'graph';
     if (/\/self-test\//.test(path)) return 'self-test';
@@ -681,19 +685,23 @@
     }
 
     const kind = currentRouteKind();
-    if (kind !== 'graph' && kind !== 'self-test' && kind !== 'extend') return;
+    if (kind !== 'graph' && kind !== 'courseware' && kind !== 'self-test' && kind !== 'extend') return;
 
     const key = location.pathname + location.search;
     if (nonVideoAdvanceKey === key) return;
     if (!nonVideoAdvanceSince) nonVideoAdvanceSince = Date.now();
     const elapsed = Date.now() - nonVideoAdvanceSince;
 
-    if (kind === 'graph') {
-      if (elapsed < CFG.graphAdvanceDelay) return;
+    if (kind === 'graph' || kind === 'courseware') {
+      const isGraph = kind === 'graph';
+      const label = isGraph ? '图文' : '课件';
+      const minDelay = isGraph ? CFG.graphAdvanceDelay : CFG.coursewareAdvanceDelay;
+      const maxWait = isGraph ? CFG.graphReadWaitMs : CFG.coursewareReadWaitMs;
+      if (elapsed < minDelay) return;
       const state = await bridgeRequest('state', 1200);
       const isRead = !!(state && state.ok && state.data && state.data.isRead);
-      if (!isRead && elapsed < CFG.graphReadWaitMs) return;
-      log(isRead ? '图文已读，继续下一个' : '图文等待完成状态超时，继续下一个');
+      if (!isRead && elapsed < maxWait) return;
+      log(isRead ? label + '已读，继续下一个' : label + '等待完成状态超时，继续下一个');
     } else if (elapsed < CFG.skipAdvanceDelay) {
       return;
     }

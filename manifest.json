@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "星空雨课堂助手",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "长江雨课堂 / 学堂在线（ai-workspace 学习空间）增强助手：视频播完自动跳下一个、防切屏暂停、自动二倍速。",
   "icons": {
     "16": "icon16.png",
